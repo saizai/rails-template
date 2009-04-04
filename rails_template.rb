@@ -92,8 +92,7 @@ load 'config/deploy'
 
 gem 'piston'
 gem 'ruby-debug'
-#
- Inline debugging helpers
+# Inline debugging helpers
 plugin 'debug-view-helper', :svn => 'http://www.realityforge.org/svn/public/code/debug-view-helper/trunk'
 plugin 'browser-logger', :svn => 'svn://rubyforge.org/var/svn/browser-logger'
 plugin 'browser-prof', :svn => 'svn://rubyforge.org/var/svn/browser-prof'
@@ -119,6 +118,7 @@ end
 
 if yes?("Use Facebook?")
 	gem 'hpricot', :source => 'http://code.whytheluckystiff.net'
+	gem 'mysql_bigint_ids', :git => 'git://github.com/gumayunov/mysql_bigint_ids.git'
 	plugin 'facebooker', :git => 'git://github.com/mmangino/facebooker.git'
 	initializer 'mime_types.rb', %q{Mime::Type.register_alias 'text/html', :fbml}
 end
