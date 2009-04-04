@@ -79,11 +79,6 @@ plugin 'cache_fu', :git => 'git://github.com/defunkt/cache_fu.git'
 # Meta & debugging
 gem 'capistrano'
 capify!
-file 'Capfile',
-%q{load 'deploy' if respond_to?(:namespace) # cap2 differentiator
-Dir['vendor/plugins/*/recipes/*.rb'].each { |plugin| load(plugin) }
-load 'config/deploy'
-}
 
 gem 'piston'
 gem 'ruby-debug'
