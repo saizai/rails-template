@@ -53,7 +53,7 @@ end
 
 # Utility
 gem 'mislav-will_paginate', :lib => 'will_paginate'
-gem 'markcatley-google_analytics', :lib => 'google_analytics'
+gem 'rubaidh-google_analytics', :lib => 'rubaidh/google_analytics', :source => 'http://gems.github.com'
 initializer 'google-analytics.rb', <<-END
 #Rubaidh::GoogleAnalytics.tracker_id = 'UA-######-#'
 END
@@ -75,7 +75,9 @@ plugin 'graceful_mailto_obfuscator', :svn => 'http://svn.playtype.net/plugins/gr
 plugin 'white_list', :svn => 'http://svn.techno-weenie.net/projects/plugins/white_list/'
 plugin 'squirrel', :git => 'git://github.com/thoughtbot/squirrel.git'
 # Caching
-gem 'memcache-client', :git => 'git://github.com/mperham/memcache-client.git'
+gem 'ph7-system-timer', :lib => 'ph7/system-timer', :source => 'http://gems.github.com' # used by memcache-client for speed
+gem 'memcache-client'
+# gem 'mperham-memcache-client', :lib => 'mperham/memcache-client', :source => 'http://gems.github.com'
 plugin 'cache_fu', :git => 'git://github.com/defunkt/cache_fu.git'
 # Meta & debugging
 gem 'capistrano'
@@ -207,6 +209,11 @@ if yes?("Do you want tags with that?")
   plugin 'acts_as_taggable_redux', :git => 'git://github.com/geemus/acts_as_taggable_redux.git'
   rake('acts_as_taggable:db:create')
 end
+
+
+generate("controller", "Main index home about") # For plain html pages
+
+route('map.root :controller => "main"')
 
 # Final install steps
 # rake('gems:install', :sudo => true)
