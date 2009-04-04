@@ -36,26 +36,6 @@ ActionController::Base.session = { :session_key => '_#{(1..6).map { |x| (65 + ra
 ActionController::Base.session_store = :active_record_store
 END
 
-initializer 'ar-extensions.rb', <<-END
-require 'ar-extensions/adapters/mysql'
-require 'ar-extensions/import/mysql'
-END
-
-
-initializer 'google-analytics.rb', <<-END
-#Rubaidh::GoogleAnalytics.tracker_id = 'UA-######-#'
-END
-
-initializer 'exception-notifier.rb', <<-END
-ExceptionNotifier.exception_recipients = %w(example@example.com)
-END
-
-initializer 'workling.rb', <<-END
-#Workling::Remote.dispatcher = Workling::Remote::Runners::SpawnRunner.new # This will run async tasks via Spawn
-Workling::Remote.dispatcher = Workling::Remote::Runners::StarlingRunner.new # This will run async tasks via Starling
-Workling::Return::Store.instance = Workling::Return::Store::StarlingReturnStore.new
-END
-
 file 'app/views/layouts/_flashes.html.erb',
 %q{<div id="flash">
 <% flash.each do |key, value| -%>
@@ -74,18 +54,28 @@ end
 # Utility
 gem 'mislav-will_paginate', :lib => 'will_paginate'
 gem 'markcatley-google_analytics', :lib => 'google_analytics'
+initializer 'google-analytics.rb', <<-END
+#Rubaidh::GoogleAnalytics.tracker_id = 'UA-######-#'
+END
 gem 'ar-extensions'
+initializer 'ar-extensions.rb', <<-END
+require 'ar-extensions/adapters/mysql'
+require 'ar-extensions/import/mysql'
+END
 gem 'utf8proc'
 gem 'RedCloth', :lib => 'redcloth'
 # plugin 'asset_packager', :git => 'git://github.com/sbecker/asset_packager.git'
 plugin 'bundle-fu', :git => 'git://github.com/timcharper/bundle-fu.git'
 plugin 'exception_notification', :git => 'git://github.com/rails/exception_notification.git'
+initializer 'exception-notifier.rb', <<-END
+ExceptionNotifier.exception_recipients = %w(example@example.com)
+END
 plugin 'graceful_mailto_obfuscator', :svn => 'http://svn.playtype.net/plugins/graceful_mailto_obfuscator/'
 plugin 'white_list', :svn => 'http://svn.techno-weenie.net/projects/plugins/white_list/'
 plugin 'squirrel', :git => 'git://github.com/thoughtbot/squirrel.git'
 # Caching
-gem 'fiveruns-memcache-client', :lib => 'memcache-client'
-gem 'cache-fu'
+gem 'memcache-client', :git => 'git://github.com/mperham/memcache-client.git'
+plugin 'cache_fu', :git => 'git://github.com/defunkt/cache_fu.git'
 # Meta & debugging
 gem 'capistrano'
 capify!
@@ -107,6 +97,11 @@ if yes?("Use starling/workling for backgrounding?")
 	plugin 'workling', :git => 'git://github.com/purzelrakete/workling.git'
 	plugin 'workling_mailer', :git => 'git://github.com/langalex/workling_mailer.git'
 	plugin 'spawn', :git => 'git://github.com/tra/spawn.git'
+	initializer 'workling.rb', <<-END
+#Workling::Remote.dispatcher = Workling::Remote::Runners::SpawnRunner.new # This will run async tasks via Spawn
+Workling::Remote.dispatcher = Workling::Remote::Runners::StarlingRunner.new # This will run async tasks via Starling
+Workling::Return::Store.instance = Workling::Return::Store::StarlingReturnStore.new
+	END
 end
 
 if yes?("Use Juggernaut for push?")
