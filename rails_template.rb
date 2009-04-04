@@ -148,6 +148,7 @@ if yes?("Have authenticated users?")
 	plugin 'validates_email_veracity_of', :git => 'git://github.com/Empact/validates_email_veracity_of.git'
 	
 	gem 'ruby-openid', :lib => 'openid'  
+	rake('gems:install', :sudo => true) # must install gems before running rake
 	plugin 'open_id_authentication', :git => 'git://github.com/rails/open_id_authentication.git'
 	rake('open_id_authentication:db:create')
 	
@@ -208,6 +209,8 @@ END
 
 end
 
+rake('gems:install', :sudo => true) # must install gems before running rake
+
 # tags
 if yes?("Do you want tags with that?")
   plugin 'acts_as_taggable_redux', :git => 'git://github.com/geemus/acts_as_taggable_redux.git'
@@ -215,7 +218,7 @@ if yes?("Do you want tags with that?")
 end
 
 # Final install steps
-rake('gems:install', :sudo => true)
+# rake('gems:install', :sudo => true)
 rake('db:sessions:create')
 rake('db:migrate')
 
