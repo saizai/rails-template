@@ -59,8 +59,9 @@ initializer 'google-analytics.rb', <<-END
 END
 gem 'ar-extensions'
 initializer 'ar-extensions.rb', <<-END
-require 'ar-extensions/adapters/mysql'
-require 'ar-extensions/import/mysql'
+## Add these to AFTER the environment.rb initalize block. Unfortunately, they cause errors in an intializer.
+# require 'ar-extensions/adapters/mysql'
+# require 'ar-extensions/import/mysql'
 END
 gem 'utf8proc'
 gem 'RedCloth', :lib => 'redcloth'
