@@ -165,7 +165,7 @@ file 'app/models/user_observer.rb', <<-END
         UserMailer.deliver_activation(user) if user.recently_activated?
       end
     end
-end
+END
 	
 # 	plugin 'role_requirement', :git => 'git://github.com/timcharper/role_requirement.git' # these two are competitors. role_req is simpler.
 #	generate("roles", "Role User")
