@@ -51,11 +51,27 @@ ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.update(k => v)
 end
 }
 
+initializer 'mail.rb', <<-END
+ActionMailer::Base.delivery_method = :sendmail
+ActionMailer::Base.default_charset = "utf-8"
+
+#  ActionMailer::Base.smtp_settings = {
+#  :address        => "smtp.gmail.com",
+#  :port           => 587,
+#  :domain         => "example.com",
+#  :authentication => :plain,
+#  :user_name      => "username@example.com",
+#  :password       => "password"
+#}
+
+END
+
+
 # Utility
 gem 'mislav-will_paginate', :lib => 'will_paginate'
-gem 'rubaidh-google_analytics', :lib => 'rubaidh/google_analytics', :source => 'http://gems.github.com'
+gem 'markcatley-google_analytics', :lib => 'rubaidh/google_analytics', :source => 'http://gems.github.com'
 initializer 'google-analytics.rb', <<-END
-#Rubaidh::GoogleAnalytics.tracker_id = 'UA-######-#'
+Rubaidh::GoogleAnalytics.tracker_id = 'UA-######-#'
 END
 gem 'ar-extensions'
 initializer 'ar-extensions.rb', <<-END
@@ -75,9 +91,9 @@ plugin 'graceful_mailto_obfuscator', :svn => 'http://svn.playtype.net/plugins/gr
 plugin 'white_list', :svn => 'http://svn.techno-weenie.net/projects/plugins/white_list/'
 plugin 'squirrel', :git => 'git://github.com/thoughtbot/squirrel.git'
 # Caching
-gem 'ph7-system-timer', :lib => 'ph7/system-timer', :source => 'http://gems.github.com' # used by memcache-client for speed
-gem 'memcache-client'
-# gem 'mperham-memcache-client', :lib => 'mperham/memcache-client', :source => 'http://gems.github.com'
+gem 'SystemTimer', :lib => 'system_timer', :source => 'http://gems.github.com' # used by memcache-client for speed
+# gem 'ph7-system-timer', :lib => 'systemtimer', :source => 'http://gems.github.com' # used by memcache-client for speed
+gem 'mperham-memcache-client', :lib => 'memcache', :source => 'http://gems.github.com'
 plugin 'cache_fu', :git => 'git://github.com/defunkt/cache_fu.git'
 # Meta & debugging
 gem 'capistrano'
@@ -86,19 +102,20 @@ capify!
 gem 'piston'
 gem 'ruby-debug'
 # Inline debugging helpers
-plugin 'debug-view-helper', :svn => 'http://www.realityforge.org/svn/public/code/debug-view-helper/trunk'
+# plugin 'debug-view-helper', :svn => 'http://www.realityforge.org/svn/public/code/debug-view-helper/trunk' # generates error - view_debug_helper.rb:108:in `original_flash': wrong number of arguments (1 for 0)
 # plugin 'browser-logger', :svn => 'svn://rubyforge.org/var/svn/browser-logger' # generates error - browser-logger.rb:47:in `alias_method': undefined method `out' for class `ActionController::CgiResponse' (NameError)
 plugin 'browser-prof', :svn => 'svn://rubyforge.org/var/svn/browser-prof'
 
 if yes?("Use starling/workling for backgrounding?")
-	gem 'starling-starling'
+	gem 'starling-starling', :lib => 'starling', :source => 'http://gems.github.com'
 	plugin 'workling', :git => 'git://github.com/purzelrakete/workling.git'
 	plugin 'workling_mailer', :git => 'git://github.com/langalex/workling_mailer.git'
 	plugin 'spawn', :git => 'git://github.com/tra/spawn.git'
 	initializer 'workling.rb', <<-END
-#Workling::Remote.dispatcher = Workling::Remote::Runners::SpawnRunner.new # This will run async tasks via Spawn
-Workling::Remote.dispatcher = Workling::Remote::Runners::StarlingRunner.new # This will run async tasks via Starling
-Workling::Return::Store.instance = Workling::Return::Store::StarlingReturnStore.new
+# Reverse the commenting below once starling is up and running
+Workling::Remote.dispatcher = Workling::Remote::Runners::SpawnRunner.new # This will run async tasks via Spawn
+#Workling::Remote.dispatcher = Workling::Remote::Runners::StarlingRunner.new # This will run async tasks via Starling
+#Workling::Return::Store.instance = Workling::Return::Store::StarlingReturnStore.new
 	END
 end
 
@@ -116,7 +133,7 @@ end
 
 if yes?("Use Facebook?")
 	gem 'hpricot', :source => 'http://code.whytheluckystiff.net'
-	gem 'mysql_bigint_ids', :git => 'git://github.com/gumayunov/mysql_bigint_ids.git'
+	plugin 'mysql_bigint_ids', :git => 'git://github.com/gumayunov/mysql_bigint_ids.git'
 	plugin 'facebooker', :git => 'git://github.com/mmangino/facebooker.git'
 	initializer 'mime_types.rb', %q{Mime::Type.register_alias 'text/html', :fbml}
 end
@@ -148,8 +165,8 @@ if yes?("Have authenticated users?")
 	plugin 'restful-authentication', :git => 'git://github.com/technoweenie/restful-authentication.git'
 	generate("authenticated", "user session --include-activation --aasm") # also should include --rspec if rspec is installed
 	route "map.signup  '/signup', :controller => 'users',   :action => 'new'"
-	route "map.login  '/login',  :controller => 'session', :action => 'new'"
-	route "map.logout '/logout', :controller => 'session', :action => 'destroy'"
+	route "map.login  '/login',  :controller => 'sessions', :action => 'new'"
+	route "map.logout '/logout', :controller => 'sessions', :action => 'destroy'"
 	route "map.activate '/activate/:activation_code', :controller => 'users', :action => 'activate', :activation_code => nil"
 	route "map.resources :users, :member => { :suspend => :put, :unsuspend => :put, :purge => :delete }"
 	initializer 'restful-auth.rb', <<-END
@@ -192,7 +209,7 @@ END
   # This can be set to a hash or to an explicit path like '/login'
   #
   LOGIN_REQUIRED_REDIRECTION = { :controller => '/sessions', :action => 'new' }
-  PERMISSION_DENIED_REDIRECTION = { :controller => '/home', :action => 'index' }
+  PERMISSION_DENIED_REDIRECTION = { :controller => '/main', :action => 'index' }
 
   # The method your auth scheme uses to store the location to redirect back to
   STORE_LOCATION_METHOD = :store_location
