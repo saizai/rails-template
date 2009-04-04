@@ -2,6 +2,10 @@
 # SUPER DARING APP TEMPLATE 1.0 - By Peter Cooper
 # further modified by Sai Emrys (saizai)
 
+# invoke using:
+#  rails projectnamehere -m http://github.com/saizai/rails-template/raw/master/rails_template.rb
+
+
 # Delete unnecessary files
 run "rm README"
 run "rm public/index.html"
@@ -23,13 +27,14 @@ db/*.sqlite3
 db/*.db
 db/schema.rb
 vendor/rails
+config/initializers/site_keys.rb
 END
 
 # Set up session store initializer
 initializer 'session_store.rb', <<-END
 ActionController::Base.session = { :session_key => '_#{(1..6).map { |x| (65 + rand(26)).chr }.join}_session', :secret => '#{(1..40).map { |x| (65 + rand(26)).chr }.join}' }
 ActionController::Base.session_store = :active_record_store
-  END
+END
 
 initializer 'ar-extensions.rb', <<-END
 require 'ar-extensions/adapters/mysql'
@@ -94,7 +99,7 @@ gem 'piston'
 gem 'ruby-debug'
 # Inline debugging helpers
 plugin 'debug-view-helper', :svn => 'http://www.realityforge.org/svn/public/code/debug-view-helper/trunk'
-plugin 'browser-logger', :svn => 'svn://rubyforge.org/var/svn/browser-logger'
+# plugin 'browser-logger', :svn => 'svn://rubyforge.org/var/svn/browser-logger' # generates error - browser-logger.rb:47:in `alias_method': undefined method `out' for class `ActionController::CgiResponse' (NameError)
 plugin 'browser-prof', :svn => 'svn://rubyforge.org/var/svn/browser-prof'
 
 if yes?("Use starling/workling for backgrounding?")
@@ -140,14 +145,66 @@ if yes?("Have authenticated users?")
 	plugin 'acts_as_preferenced', :git => 'git://github.com/Skiz/acts_as_preferenced.git'
 	plugin 'user_stamp', :git => 'git://github.com/jnunemaker/user_stamp.git'
 	plugin 'validates_email_veracity_of', :git => 'git://github.com/Empact/validates_email_veracity_of.git'
-#	plugin 'rails-authorization-plugin', :git => 'git://github.com/DocSavage/rails-authorization-plugin.git'
-#  plugin 'open_id_authentication', :git => 'git://github.com/rails/open_id_authentication.git'
-#  plugin 'role_requirement', :git => 'git://github.com/timcharper/role_requirement.git'
-  plugin 'restful-authentication', :git => 'git://github.com/technoweenie/restful-authentication.git'
-#  gem 'ruby-openid', :lib => 'openid'  
-  generate("authenticated", "user session")
-  generate("roles", "Role User")
-  rake('open_id_authentication:db:create')
+	
+	gem 'ruby-openid', :lib => 'openid'  
+	plugin 'open_id_authentication', :git => 'git://github.com/rails/open_id_authentication.git'
+	rake('open_id_authentication:db:create')
+	
+	plugin 'restful-authentication', :git => 'git://github.com/technoweenie/restful-authentication.git'
+	generate("authenticated", "user session --include-activation --aasm") # also should include --rspec if rspec is installed
+	route "map.signup  '/signup', :controller => 'users',   :action => 'new'"
+	route "map.login  '/login',  :controller => 'session', :action => 'new'"
+	route "map.logout '/logout', :controller => 'session', :action => 'destroy'"
+	route "map.activate '/activate/:activation_code', :controller => 'users', :action => 'activate', :activation_code => nil"
+	route "map.resources :users, :member => { :suspend => :put, :unsuspend => :put, :purge => :delete }"
+	initializer 'restful-auth.rb', <<-END
+		ActiveRecord::Base.observers += [UserObserver]
+		ActiveRecord::Base.instantiate_observers
+	END
+file 'app/models/user_observer.rb', <<-END
+    class UserObserver < ActiveRecord::Observer
+      def after_create(user)
+        user.reload
+        UserMailer.deliver_signup_notification(user)
+      end
+      def after_save(user)
+        user.reload
+        UserMailer.deliver_activation(user) if user.recently_activated?
+      end
+    end
+end
+	
+# 	plugin 'role_requirement', :git => 'git://github.com/timcharper/role_requirement.git' # these two are competitors. role_req is simpler.
+#	generate("roles", "Role User")
+# vs.
+	plugin 'rails-authorization-plugin', :git => 'git://github.com/DocSavage/rails-authorization-plugin.git'
+	initializer 'authorization.rb', <<-END
+  # NOTE: This may need to be moved to BEFORE the rails initializer block in environment.rb
+  # Add to the User model:
+  #     acts_as_authorized_user
+  #     acts_as_authorizable  # also add this to other models that take roles
+
+  # Authorization plugin for role based access control
+  # You can override default authorization system constants here.
+
+  # Can be 'object roles' or 'hardwired'
+  AUTHORIZATION_MIXIN = "object roles"
+
+  # NOTE : If you use modular controllers like '/admin/products' be sure
+  # to redirect to something like '/sessions' controller (with a leading slash)
+  # as shown in the example below or you will not get redirected properly
+  #
+  # This can be set to a hash or to an explicit path like '/login'
+  #
+  LOGIN_REQUIRED_REDIRECTION = { :controller => '/sessions', :action => 'new' }
+  PERMISSION_DENIED_REDIRECTION = { :controller => '/home', :action => 'index' }
+
+  # The method your auth scheme uses to store the location to redirect back to
+  STORE_LOCATION_METHOD = :store_location
+END
+	generate("role_model", "Role")
+# end of authorization plugin - phew
+
 end
 
 # tags
