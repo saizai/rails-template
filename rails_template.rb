@@ -41,7 +41,7 @@ initializer 'google-analytics.rb', <<-END
 #Rubaidh::GoogleAnalytics.tracker_id = 'UA-######-#'
 END
 
-intializer 'exception-notifier.rb', <<-END
+initializer 'exception-notifier.rb', <<-END
 ExceptionNotifier.exception_recipients = %w(example@example.com)
 END
 
