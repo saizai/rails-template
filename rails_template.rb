@@ -135,6 +135,7 @@ end
 
 if yes?("Use SSL?")
 	plugin 'asset-hosting-with-minimum-ssl', :git => 'git://github.com/dhh/asset-hosting-with-minimum-ssl.git'
+	plugin 'ssl_requirement', :git => 'git://github.com/bcurren/ssl_requirement.git'
 end
 
 
