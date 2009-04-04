@@ -67,8 +67,8 @@ end
 }
 
 # Utility
-gem 'mislav-will_paginate'
-gem 'markcatley-google_analytics'
+gem 'mislav-will_paginate', :lib => 'will_paginate'
+gem 'markcatley-google_analytics', :lib => 'google_analytics'
 gem 'ar-extensions'
 gem 'utf8proc'
 gem 'RedCloth', :lib => 'redcloth'
@@ -79,7 +79,7 @@ plugin 'graceful_mailto_obfuscator', :svn => 'http://svn.playtype.net/plugins/gr
 plugin 'white_list', :svn => 'http://svn.techno-weenie.net/projects/plugins/white_list/'
 plugin 'squirrel', :git => 'git://github.com/thoughtbot/squirrel.git'
 # Caching
-gem 'fiveruns-memcache-client'
+gem 'fiveruns-memcache-client', :lib => 'memcache-client'
 gem 'cache-fu'
 # Meta & debugging
 gem 'capistrano'
